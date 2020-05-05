@@ -24,6 +24,7 @@ now = dt.datetime.now()
 # fetch data from yfinance
 df = pdr.get_data_yahoo(stock, start, now)
 
+#print(df)
 # Set the moving average range number
 ma = 50
 
@@ -35,7 +36,7 @@ df[smaString] = df.iloc[:, 4].rolling(window = ma).mean()
 
 # deletes the first 50 rows of NaN vals
 df = df.iloc[ma:]
-print(df)
+#print(df)
 
 numH = 0
 numL = 0
@@ -43,14 +44,17 @@ numL = 0
 # looping over each index to find when Closed higher that Moving Average
 for i in df.index:
     if (df["Adj Close"][i]) > df[smaString][i]:
-        print("the close is higher")
+        #("the close is higher")
         numH += 1
     else:
-        print("the close is lower")
+        #print("the close is lower")
         numL += 1
 
-print(numH)
-print(numL)
+msft = yf.Ticker("MSFT")
+print(msft.recommendations)
+
+#print(numH)
+#print(numL)
 
 
 
