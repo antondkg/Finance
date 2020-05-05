@@ -50,9 +50,6 @@ for i in df.index:
         #print("the close is lower")
         numL += 1
 
-msft = yf.Ticker("MSFT")
-print(msft.recommendations)
-
 #print(numH)
 #print(numL)
 
