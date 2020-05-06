@@ -62,7 +62,8 @@ for i in stockList.index:
             ma_200_20 = df["SMA_200"][-20]
         except Exception:
             ma_200_20 = 0
-       ######## Trading Conditions ####################################################
+       ####### Trading Conditions ####################################################
+       # Mark Minervini signals
         #region
         # Condition 1: Current Price > 150 SMA and > 200 SMA
         if (currClose > ma_150 and currClose > ma_200):
