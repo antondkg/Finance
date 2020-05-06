@@ -2,15 +2,24 @@ import datetime as dt
 import pandas as pd
 from pandas_datareader import data as pdr
 import yfinance as yf
-#from tkinter import Tk
-#from tkinter.filedialog import askopenfilename as aof
+import os
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename as aof
 
 yf.pdr_override()
 start = dt.datetime(2017, 12, 1)
 now = dt.datetime.now()
 
+# UI element to choose the Excel file
+
+root = Tk()
+ftypes = [(".xls", "*.xlsx"),(".xls", "*.xlsm"), (".xls", "*.xls")]
+ttl = "Title"
+dir1 = '/Users/antoniogoncalves'
+filepath = aof(initialdir = dir1, title = ttl, filetypes = ftypes)
+
 # set the file path for list of stocks to analyze
-filepath = r"/Users/antoniogoncalves/Google Drive/Development/Finance/RichardStocks.xlsx"
+#filepath = r"/Users/antoniogoncalves/Google Drive/Development/Finance/RichardStocks.xlsx"
 
 
 # convert excel data into pandas dataframe
@@ -117,4 +126,10 @@ for i in stockList.index:
 
 print(exportList)
 
-
+# original file path and adding the name
+newFile = os.path.dirname(filepath) + "/ScreenOutput/" + str(dt.datetime.now()) + ".xlsx"
+# new writer object
+writer = pd.ExcelWriter(newFile)
+# export dataframe to the excel
+exportList.to_excel(writer, "Sheet1")
+writer.save()
