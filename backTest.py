@@ -73,7 +73,8 @@ for num, i in enumerate(df.index):
     start = df["Adj Close"][0]
 print(percentChange)
 
-## KPI
+## KPIs #####################################################
+#############################################################
 
 gains = 0
 ng = 0
