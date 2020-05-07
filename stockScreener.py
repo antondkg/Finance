@@ -1,5 +1,6 @@
 import datetime as dt
 import pandas as pd
+import openpyxl as op
 from pandas_datareader import data as pdr
 import yfinance as yf
 import os
@@ -10,30 +11,34 @@ yf.pdr_override()
 start = dt.datetime(2017, 12, 1)
 now = dt.datetime.now()
 
+
 # UI element to choose the Excel file
+choice = input("Choose different file? [y/n]:  ")
+if choice == "y":
+    root = Tk()
+    ftypes = [(".xls", "*.xlsx"),(".xls", "*.xlsm"), (".xls", "*.xls")]
+    ttl = "Title"
+    dir1 = '/Users/antoniogoncalves/'
+    filepath = aof(initialdir = dir1, title = ttl, filetypes = ftypes)
+else:
+    # set the file path for list of stocks to analyze
+    filepath = r"/Users/antoniogoncalves/Google Drive/Development/Finance/WatchList.xlsx"
 
-root = Tk()
-ftypes = [(".xls", "*.xlsx"),(".xls", "*.xlsm"), (".xls", "*.xls")]
-ttl = "Title"
-dir1 = '/Users/antoniogoncalves'
-filepath = aof(initialdir = dir1, title = ttl, filetypes = ftypes)
-
-# set the file path for list of stocks to analyze
-#filepath = r"/Users/antoniogoncalves/Google Drive/Development/Finance/RichardStocks.xlsx"
+# export dataframe to the excel
 
 
 # convert excel data into pandas dataframe
-stockList = pd.read_excel(filepath)
-stockList = stockList.head()
+stockList = pd.read_excel(filepath, "Stocks")
+#tockList = stockList.head()
 
 # export the list into a pandas df
-exportList = pd.DataFrame(columns = ["Stock", "RS_Rating", "50 Day MA", "150 Day MA", "200 Day MA", "52 Week High", "52 Week Low"])
-
+exportList = pd.DataFrame(columns = ["Stock", "Current Price", "50 Day MA", "150 Day MA", "200 Day MA", "52 Week High", "52 Week Low", "BUY"])
+exportList.set_index("Stock", inplace=True)
 # Iterate through each of the stocks
 for i in stockList.index:
-    stock = str(stockList["Symbol"][i])
-    RS_Rating = stockList["RS Rating"][i]
-
+    stock = str(stockList["Ticker"][i])
+    #RS_Rating = stockList["RS Rating"][i]
+    RS_Rating = 100
     # Check to see if yfinance has the data for the specified stocks
     try:
         df = pdr.get_data_yahoo(stock, start, now)
@@ -85,7 +90,7 @@ for i in stockList.index:
             cond_3 = False
 
         # Condition 4: 50 SMA > 150 SMA and 50 SMA > 200 SMA
-        if (ma_50 > ma_150 and ma_50 > ma_200):
+        if (ma_50 > ma_150 * 0.75 and ma_50 > ma_200 * 0.75):
             cond_4 = True
         else:
             cond_4 = False
@@ -104,7 +109,7 @@ for i in stockList.index:
             cond_6 = False
 
         # Condition 7: Current Price is within 25% of 52 week high
-        if (currClose >= high52Week * 0.75):
+        if (currClose >= high52Week * 0.70):
             cond_7 = True
         else:
             cond_7 = False
@@ -115,22 +120,42 @@ for i in stockList.index:
         else:
             cond_8 = False
 
+
         #endregion
         #### Check if all conditions are true
         if (cond_1 and cond_2 and cond_3 and cond_4 and cond_5 and cond_6\
             and cond_7 and cond_8):
-            export = pd.DataFrame({"Stock": stock, "RS_Rating": RS_Rating, "50 Day MA": ma_50, "150 Day MA": ma_150, "200 Day MA": ma_200, "52 Week High" : high52Week, "52 Week Low" : low52Week}, index = [0])
+            export = pd.DataFrame(
+                {"Stock": stock, "Current Price": currClose, "50 Day MA": ma_50, "150 Day MA": ma_150, "200 Day MA": ma_200,
+                 "52 Week High": high52Week, "52 Week Low": low52Week, "BUY": "Yes"}, index=[0])
+
+            export.set_index("Stock", inplace=True)
+
+            exportList = exportList.append(export)
+
+        else:
+            export = pd.DataFrame(
+                {"Stock": stock, "Current Price": currClose, "50 Day MA": ma_50, "150 Day MA": ma_150, "200 Day MA": ma_200,
+                 "52 Week High": high52Week, "52 Week Low": low52Week, "BUY": "No"}, index=[0])
+
+            export.set_index("Stock", inplace=True)
             exportList = exportList.append(export)
 
     except Exception:
         print("No data on " + stock)
 
-print(exportList)
+
+# Open the excel file so the old sheet does not get deleted
+book = op.load_workbook(filepath)
+# Set writer using openpyxl
+writer = pd.ExcelWriter(filepath, engine = 'openpyxl')
+
+# Copy data from old book into the new book
+writer.book = book
+writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
 
 # original file path and adding the name
-newFile = os.path.dirname(filepath) + "/ScreenOutput/" + str(dt.datetime.now()) + ".xlsx"
-# new writer object
-writer = pd.ExcelWriter(newFile)
-# export dataframe to the excel
-exportList.to_excel(writer, "Sheet1")
+exportList.to_excel(writer, "ScreenOutput")
 writer.save()
+# new writer object
+
